@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import offerRoutes from './routes/offerRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import { setupSwagger } from './config/swagger.js';
 
 dotenv.config();
 
@@ -15,5 +20,11 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/offers', offerRoutes);
+app.use('/api/orders', orderRoutes);
+
+setupSwagger(app);
 
 export { app };
