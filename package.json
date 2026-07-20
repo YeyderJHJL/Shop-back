@@ -53,5 +53,8 @@
       "prisma",
       "@prisma/engines"
     ]
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

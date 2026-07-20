@@ -6,6 +6,7 @@ import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import offerRoutes from './routes/offerRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 import { setupSwagger } from './config/swagger.js';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 setupSwagger(app);
 
