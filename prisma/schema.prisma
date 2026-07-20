@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[] @relation("AdminProducts")
+  orders   Order[]   @relation("ClientOrders")
+}
+
+model Product {
+  id             String    @id @default(uuid())
+  name           String
+  description    String?
+  imageUrl        String?
+  originalPrice  Float
+  currentPrice   Float
+  stock          Int
+  expirationDate DateTime?
+  adminId        String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  admin      User        @relation("AdminProducts", fields: [adminId], references: [id])
+  offers     Offer[]
+  orderItems OrderItem[]
+}
+
+model Offer {
+  id                 String   @id @default(uuid())
+  productId          String
+  discountPercentage Float
+  startDate          DateTime @default(now())
+  endDate            DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  clientId    String
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  client     User        @relation("ClientOrders", fields: [clientId], references: [id])
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id              String   @id @default(uuid())
+  orderId         String
+  productId       String
+  quantity        Int
+  priceAtPurchase Float
+  createdAt       DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
