@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { createProduct, getProducts, getProductById, updateProduct, deleteProduct } from '../controllers/productController.js';
+import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, uploadProductImage } from '../controllers/productController.js';
 import { authenticateJWT, authorizeRole } from '../middlewares/authMiddleware.js';
+import { upload } from '../middlewares/uploadMiddleware.js';
 
 const router = Router();
 
@@ -46,7 +47,7 @@ router.get('/:id', getProductById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -58,12 +59,45 @@ router.get('/:id', getProductById);
  *                 type: number
  *               stock:
  *                 type: number
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Producto creado
  */
-router.post('/', authenticateJWT, authorizeRole(['ADMIN']), createProduct);
+router.post('/', authenticateJWT, authorizeRole(['ADMIN']), upload.single('image'), createProduct);
 router.put('/:id', authenticateJWT, authorizeRole(['ADMIN']), updateProduct);
 router.delete('/:id', authenticateJWT, authorizeRole(['ADMIN']), deleteProduct);
+
+/**
+ * @openapi
+ * /api/products/{id}/image:
+ *   post:
+ *     summary: Subir o actualizar la imagen de un producto existente (Solo Admin)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Imagen actualizada
+ */
+router.post('/:id/image', authenticateJWT, authorizeRole(['ADMIN']), upload.single('image'), uploadProductImage);
 
 export default router;

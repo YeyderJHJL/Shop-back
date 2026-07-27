@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-for-food-waste-pr
 
 export interface AuthRequest extends Request {
   user?: { id: string; role: string };
+  file?: any;
 }
 
 export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunction): void => {

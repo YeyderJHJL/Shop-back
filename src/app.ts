@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -15,6 +16,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Servir archivos estáticos (imágenes)
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });

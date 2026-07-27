@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma.js';
 import { AuthRequest } from '../middlewares/authMiddleware.js';
-
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs/promises';
 export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description, originalPrice, currentPrice, stock, expirationDate } = req.body;
@@ -12,10 +14,22 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    let imageUrl = null;
+    if (req.file) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
+      const uploadPath = path.join(process.cwd(), 'public/uploads/products', filename);
+      await sharp(req.file.buffer)
+        .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toFile(uploadPath);
+      imageUrl = `/uploads/products/${filename}`;
+    }
+
     const newProduct = await prisma.product.create({
       data: {
         name,
         description,
+        imageUrl,
         originalPrice: Number(originalPrice),
         currentPrice: Number(currentPrice),
         stock: Number(stock),
@@ -93,5 +107,52 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
     res.status(200).json({ message: 'Producto eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ message: 'Error eliminando producto', error });
+  }
+};
+
+export const uploadProductImage = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    
+    if (!req.file) {
+      res.status(400).json({ message: 'No se subió ninguna imagen' });
+      return;
+    }
+
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) {
+      res.status(404).json({ message: 'Producto no encontrado' });
+      return;
+    }
+
+    // Opcional: Eliminar imagen anterior si existe para ahorrar espacio
+    if (product.imageUrl) {
+      try {
+        const oldPath = path.join(process.cwd(), 'public', product.imageUrl);
+        await fs.unlink(oldPath);
+      } catch (err) {
+        console.error('No se pudo eliminar la imagen anterior:', err);
+      }
+    }
+
+    const filename = `${id}-${Date.now()}.webp`;
+    const uploadPath = path.join(process.cwd(), 'public/uploads/products', filename);
+    
+    await sharp(req.file.buffer)
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(uploadPath);
+
+    const imageUrl = `/uploads/products/${filename}`;
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: { imageUrl }
+    });
+
+    res.status(200).json({ message: 'Imagen actualizada exitosamente', product: updatedProduct });
+  } catch (error) {
+    console.error('Error subiendo imagen:', error);
+    res.status(500).json({ message: 'Error procesando la imagen', error });
   }
 };
